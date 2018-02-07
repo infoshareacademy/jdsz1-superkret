@@ -1,3 +1,8 @@
+---GRUPA SUPER KRET---
+
+
+
+--Dodanie tabeli o pracownikach:
 create TABLE pracownicy(
   id_pracownik CHARACTER VARYING(3) NOT NULL PRIMARY KEY,
   imie CHARACTER VARYING(30) NOT NULL ,
@@ -7,6 +12,7 @@ create TABLE pracownicy(
   email text
 )
 
+--Dodanie tabeli o dostawcach:
 CREATE TABLE dostawcy (
   id_dostawcy character varying(40) NOT NULL PRIMARY KEY,
   adres_ulica text,
@@ -17,6 +23,8 @@ CREATE TABLE dostawcy (
   branza text
 )
 
+
+--Dodanie tabeli o prototypach:
 CREATE TABLE prototyp (
   id_prototyp CHARACTER VARYING(100) NOT NULL PRIMARY KEY,
   wersja      CHARACTER VARYING(100) NOT NULL,
@@ -25,6 +33,8 @@ CREATE TABLE prototyp (
   cena        NUMERIC
 )
 
+
+--Dodanie tabeli o przeprowadzonych testach:
 create TABLE  monitoring(
     id_mod INTEGER NOT NULL PRIMARY KEY,
     numer_test INTEGER NOT NULL,
@@ -38,6 +48,8 @@ create TABLE  monitoring(
     FOREIGN KEY (id_prototyp) REFERENCES prototyp
   )
 
+
+  --Dodanie tabeli o zamowionych czesciach:
 create TABLE katalog_czesci
 (
 id_czesci CHARACTER VARYING(100) PRIMARY KEY NOT NULL,
@@ -49,6 +61,8 @@ data_zam date,
 id_dostawcy character varying(40) NOT NULL,
 foreign key (id_dostawcy) REFERENCES dostawcy)
 
+
+  --Dodanie tabeli o klientach planujacych zakup:
 CREATE TABLE klient
 (
   id_klient      SERIAL PRIMARY KEY NOT NULL,
@@ -59,6 +73,8 @@ CREATE TABLE klient
   email          TEXT
 )
 
+
+--Dodanie tabeli o zamowieniach:
 create table zamowienie
 (id serial primary key,
 id_prototyp CHARACTER VARYING (100) NOT NULL,
@@ -67,7 +83,7 @@ FOREIGN KEY (id_prototyp) REFERENCES prototyp,
 foreign KEY (id_klient) references klient)
 
 
-
+--Dodanie tabeli o zestawach czesci do prototypow:
 CREATE TABLE proto_zestaw(
   Id serial PRIMARY KEY ,
   id_prototyp CHARACTER VARYING (100) NOT NULL,
