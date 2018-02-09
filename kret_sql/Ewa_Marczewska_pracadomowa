@@ -1,0 +1,23 @@
+-- 1) lista prototpów wraz z elementami z proto zestawu
+
+select *
+from prototyp, proto_zestaw
+where prototyp.id_prototyp = proto_zestaw.id_prototyp;
+
+-- 2) liczba zestawów dla danego prototypu
+
+select prototyp.id_prototyp, count(proto_zestaw.id_prototyp)
+from prototyp, proto_zestaw
+WHERE prototyp.id_prototyp = proto_zestaw.id_prototyp
+GROUP BY proto_zestaw.id_prototyp;
+
+-- 3) prototypy beż żadnego zestawu
+
+select id_prototyp
+from proto_zestaw
+WHERE id_prototyp IS NULL;
+
+-- 4) średni czas produkcji prototypów (jedna liczba)
+
+select avg(data_end - data_start)
+from prototyp;
