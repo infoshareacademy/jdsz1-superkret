@@ -9,7 +9,7 @@ where monitoring.id_pracownik = pracownicy.id_pracownik;
 Select pracownicy.nazwisko, count(monitoring.id_pracownik)
 from pracownicy, monitoring
 where monitoring.id_pracownik = pracownicy.id_pracownik
-GROUP BY monitoring.id_pracownik, pracownicy.nazwisko
+GROUP BY pracownicy.nazwisko
 ORDER BY count desc;
 
 --3) srednia długość dni testowania
