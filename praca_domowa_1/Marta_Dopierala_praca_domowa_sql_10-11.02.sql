@@ -45,6 +45,28 @@ group by 1
 order by 2 DESC
 
 
+--  5. Ile podróży to trasy złożone z jednego / dwóch / trzech / więcej tras?
+
+
+-- przy założeniu, że analizujemy każdą trasę nawet bez identyfikatora podrozy
+-- lub przy założeniu że istnieje indentyfikator
+
+with TRASY as (
+    select id_podrozy, count(1) liczba_tras
+FROM szczegoly_podrozy
+--where identyfikator_podrozy not like '%--%'
+group by 1
+order by 2 desc)
+
+select
+  count(case when liczba_tras = 1 then 1 end) pojedyncza_trasa,
+  count(case when liczba_tras = 2 then 1 end) podwojna_trasa,
+  count (case when liczba_tras = 3 then 1 end) potrojna_trasa,
+  count(case when liczba_tras > 3 then 1 end) wiecej_tras
+
+from TRASY;
+
+
 --  6.  Na które konto otrzymaliśmy najwięcej / najmniej rekompensaty?
 
 -- konto z największą rekompensatą
@@ -98,6 +120,26 @@ order by 2 desc)
 select data --suma
 from super
 where suma = (select max(suma) from super)
+
+
+-- 9. Jaka jest dystrubucja tygodniowa wniosków według kanałów? (liczba wniosków w danym tygodniu w każdym kanale
+
+select TO_CHAR(data_utworzenia, 'YYYY-WW'), KANAL, COUNT(KANAL) liczba_wnioskow
+from wnioski
+GROUP BY 1, 2
+order by 1
+
+--10.Lista wniosków przeterminowanych (przeterminowany = utworzony w naszej firmie powyżej 3 lat od daty podróży
+
+select w.id,
+  w.data_utworzenia::date,
+  s.data_wyjazdu,
+  (w.data_utworzenia-s.data_wyjazdu) roznica
+from wnioski w
+join podroze p on w.id=p.id_wniosku
+  left join szczegoly_podrozy s ON p.id = s.id_podrozy
+where (w.data_utworzenia-s.data_wyjazdu) > '3 year'
+
 
 
 
