@@ -1,0 +1,99 @@
+-- OBOWIĄZKOWE
+-- Eksploracja danych
+
+
+-- Z którego kraju mamy najwięcej wniosków?
+select jezyk, count(jezyk) as policz
+from wnioski
+GROUP BY jezyk
+ORDER BY policz DESC;
+-- odp Najwięcej wniosków było z kraju ZZ - nieokreślony
+
+-- Z którego języka mamy najwięcej wniosków?
+select kod_kraju, count(kod_kraju) as kraj
+from wnioski
+GROUP BY kod_kraju
+ORDER BY kraj DESC;
+-- odp Najwięcej wniosków jest anglojezycznych
+
+-- Ile % procent klientów podróżowało w celach biznesowych
+-- a ilu w celach prywatnych?
+-- policzenie wszystkich wniosków bez Null
+-- SELECT count(typ_podrozy)
+-- from wnioski
+-- WHERE typ_podrozy ISNULL;
+-- jak policzyć same NULL ???
+select typ_podrozy, count(id) as liczba_pasaz,
+  round(count(id)/ sum(count(id)) OVER():: NUMERIC, 2) as procent_all
+from wnioski
+WHERE typ_podrozy is NOT NULL
+GROUP BY 1;
+-- odp podroze biznesowe to 76% a prywatne 24% z podroży gdzie podany został
+
+-- Jak procentowo rozkładają się źródła polecenia?
+select zrodlo_polecenia, count(id) as liczba_polec,
+  round(count(id)/sum(count(id)) OVER():: NUMERIC, 2) as procent_polec
+from wnioski
+where zrodlo_polecenia is NOT  NULL
+GROUP BY 1;
+-- odp Źródła poleceń kształtują się następująco : przyjaciele 52%, wyszukiwarki 32%, fb/twitter 16%
+
+-- Ile podróży to trasy złożone z jednego / dwóch / trzech / więcej tras?
+-- Nie potrafie tego rozwiązać
+
+-- Na które konto otrzymaliśmy najwięcej / najmniej rekompensaty?
+SELECT konto,
+  CASE
+  WHEN konto LIKE '%PLN' THEN sum(kwota)
+  WHEN konto LIKE '%EUR' THEN (sum(kwota))* 4
+  END as wynik_PLN
+FROM szczegoly_rekompensat
+GROUP BY 1
+ORDER BY 2 DESC;
+--  odp najwiecej rokompensat otrzymalismy na konto PKO w PLN.
+
+-- Który dzień jest rekordowym w firmie w kwestii utworzonych wniosków?
+SELECT TO_CHAR (data_utworzenia, 'YYYY-MM-DD'), count(data_utworzenia)
+from wnioski
+group by 1
+order by 2 DESC;
+-- odp rekordowym w kweisti wniosków był 16-11-2017.
+
+-- Który dzień jest rekordowym w firmie w kwestii otrzymanych rekompensat?
+select TO_CHAR (data_utworzenia, 'yyyy-mm-dd'), SUM(kwota)
+from szczegoly_rekompensat
+group by 1
+order by 2 DESC;
+-- odp rekordowym w kwesti rekompensat był 16-11-2017.
+
+-- Jaka jest dystrubucja tygodniowa wniosków według kanałów? (liczba wniosków w danym tygodniu w każdym kanale)
+select TO_CHAR(data_utworzenia, 'YYYY-WW'), kanal, count(data_utworzenia)
+from wnioski
+GROUP BY 1, 2
+ORDER BY 1 DESC;
+-- odp tabela
+
+
+-- Lista wniosków przeterminowanych (przeterminowany = utworzony w naszej firmie powyżej 3 lat od daty podróży)
+
+-- NIE WIEM :(
+
+-- Badanie powracających klientów
+-- Firmie zależy na tym, aby klienci do nas wracali.
+-- Jaka część naszych klientów to powracające osoby?
+-- Jaka część naszych współpasażerów to osoby, które już wcześniej pojawiły się na jakimś wniosku?
+-- Jaka część klientów pojawiła się na innych wnioskach jako współpasażer?
+-- Czy jako nowy klient mający kilka zakłóceń, od razu składasz kilka wniosków? Jaki jest czas od złożenia pierwszego do kolejnego wniosku?
+
+-- DODATKOWE:
+--
+-- Wyłudzenia
+--
+-- Jako data scientist jesteś także zobowiązany/a do sprawdzania danych pod kątem wyłudzeń (ten sam lot, ta sama osoba).
+-- Znajdź listę współpasażerów próbujących stworzyć własny odrębny wniosek (na ten sam identifikator_podrozy), pomimo istnienia jako współpasażer na innym wniosku
+--
+
+--  Odrzucone wnioski
+--
+-- Chcemy przyjrzeć się odrzuconym wnioskom, które mają inny podobny (ten sam identifikator_podrozy) wniosek,
+-- który jest wypłacony przed utworzeniem odrzuconego wniosku. Przygotuj listę takich wniosków
