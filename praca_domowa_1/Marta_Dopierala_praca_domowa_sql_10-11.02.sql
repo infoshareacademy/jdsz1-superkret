@@ -1,28 +1,22 @@
 -- 1. Z którego kraju mamy najwięcej wniosków?
 
--- wyświetla kraj z największą liczbą wniosków + ew. liczbę wniosków
-
-select a.kod_kraju--, a.liczba_wnioskow
-from (select kod_kraju, count(1) as liczba_wnioskow
-      from wnioski
-     group by 1) a
-where a.liczba_wnioskow = (select max(a.liczba_wnioskow)
-from (select kod_kraju, count(1) as liczba_wnioskow
-      from wnioski
-     group by 1) a)
+-- poprawione
+select kod_kraju, count(1) as liczba_wnioskow
+from wnioski
+group by 1
+order by 2 DESC
+limit 1
 
 
 -- 2. Z którego języka mamy najwięcej wniosków?
 
--- kraj + ew.liczba wniosków
-with MD as (select jezyk, count(1) as liczba_wnioskow
+--poprawione
+select jezyk, count(1) as liczba_wnioskow
   from wnioski
-    group by 1)
+    group by 1
+order by 2 DESC 
+limit 1
 
-select w.jezyk --w.liczba_wnioskow
-from MD w
-WHERE w.liczba_wnioskow = (select max(w.liczba_wnioskow)
-from MD w)
 
 
 -- 3. Ile % procent klientów podróżowało w celach biznesowych a ilu w celach prywatnych?
@@ -69,58 +63,31 @@ from TRASY;
 
 --  6.  Na które konto otrzymaliśmy najwięcej / najmniej rekompensaty?
 
--- konto z największą rekompensatą
+-- poprawione
+-- tabela z kwotami rekompensat na poszczególne konta w tym max i min
 
-with najwiecej as (select konto, max(kwota) maximum
-  from szczegoly_rekompensat
-  group by 1)
-
-select n.konto, n.maximum
-from najwiecej n
-where n.maximum = (select max(n.maximum)
-from najwiecej n)
-
-
--- konto z najmniejszą rekompensatą
-
-with najmniej as (select konto, min(kwota) minimum
-  from szczegoly_rekompensat
-  group by 1)
-
-select n.konto, n.minimum
-from najmniej n
-where n.minimum = (select min(n.minimum)
-from najmniej n)
-
+select konto, sum(kwota) sumy
+from szczegoly_rekompensat
+group by 1
 
 --  7.Który dzień jest rekordowym w firmie w kwestii utworzonych wniosków?
 
--- dzień + ew.liczba rekordowych wniosków
-
-with DATY as
-(select to_char (data_utworzenia, 'YYYY-MM-DD') as data, count(*) nowe_wnioski
+-- poprawione
+select to_char (data_utworzenia, 'YYYY-MM-DD') as data, count(*) nowe_wnioski
 from wnioski
 group by 1
-order by 2 DESC)
-
-select data --nowe_wnioski
-from DATY
-where nowe_wnioski = (select max(nowe_wnioski) from daty)
+order by 2 DESC
+limit 1
 
 
 -- 8. Który dzień jest rekordowym w firmie w kwestii otrzymanych rekompensat?
 
--- dzień + ew. suma wnioskow
-with super as
-(select to_char (data_utworzenia, 'yyyy-mm-dd') as data, sum(kwota) suma
+--poprawione
+select to_char (data_utworzenia, 'yyyy-mm-dd') as data, sum(kwota) suma
 from szczegoly_rekompensat
 group by 1
-order by 2 desc)
-
-select data --suma
-from super
-where suma = (select max(suma) from super)
-
+order by 2 desc
+limit 1
 
 -- 9. Jaka jest dystrubucja tygodniowa wniosków według kanałów? (liczba wniosków w danym tygodniu w każdym kanale
 
@@ -130,6 +97,8 @@ GROUP BY 1, 2
 order by 1
 
 --10.Lista wniosków przeterminowanych (przeterminowany = utworzony w naszej firmie powyżej 3 lat od daty podróży
+
+-- odpuszczam dziś
 
 select w.id,
   w.data_utworzenia::date,
