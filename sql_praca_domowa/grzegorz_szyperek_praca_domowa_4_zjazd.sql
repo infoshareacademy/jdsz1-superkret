@@ -138,7 +138,7 @@ ORDER BY 2 DESC;
 --ODP--rekordowym dniem pod względem otrzymanych wpłat jest dzień 2017-11-14 w kwocie
 
 
----probny---
+---inny sposób---
 SELECT to_char(data_otrzymania, 'YYYY-MM-DD') as dat_ot,
 konto,
 CASE
@@ -148,7 +148,7 @@ END wynik_pln
 FROM szczegoly_rekompensat
 GROUP BY 1, 2
 ORDER BY 3 DESC
----probny---
+
 
 --
 --     Jaka jest dystrubucja tygodniowa wniosków według kanałów? (liczba wniosków w danym tygodniu w każdym kanale)
@@ -167,7 +167,7 @@ from wnioski w
 LEFT JOIN szczegoly_podrozy sp on w.id=sp.id
 JOIN podroze p ON w.id = p.id_wniosku
 LEFT JOIN szczegoly_podrozy s2 ON p.id = s2.id_podrozy
-  WHERE w.data_utworzenia >= s2.data_wyjazdu and (((cast(w.data_utworzenia as date))-s2.data_wyjazdu)/365) <=3
+  WHERE w.data_utworzenia >= s2.data_wyjazdu and (((cast(w.data_utworzenia as date))-s2.data_wyjazdu)/365) >=3
 ORDER BY 5 desc;
 
 
@@ -176,10 +176,102 @@ ORDER BY 5 desc;
 --
 --     Firmie zależy na tym, aby klienci do nas wracali.
 --     Jaka część naszych klientów to powracające osoby?
+
+--liczba wystąpień klientów więcej niż raz
+SELECT count(id), email
+FROM klienci
+GROUP BY email
+HAVING count(id)>1
+ORDER BY 1 DESC
+;
+
+--jaka to jest czesc klientow?
+SELECT count(id), email,
+  sum(1) OVER () as suma_wszystkich_wnioskow,
+  count(id)/sum(1) OVER ()::NUMERIC * 100 as procent
+FROM klienci
+GROUP BY email
+--HAVING count(id)>1
+ORDER BY 1 DESC
+;
+
+--ODP--tylko jeden klient posiada więcej niż jedno zgłoszenie i jest to liczba 618 wniosków. Jest to ok 0.35 % wszystkich wniosków. Możliwe oszustwo.
+
 --     Jaka część naszych współpasażerów to osoby, które już wcześniej pojawiły się na jakimś wniosku?
+
+
+--żle
+WITH kl_email as(
+select id_wniosku ,trim(LEADING 'kl_' FROM email) email
+FROM wspolpasazerowie
+Where email not like 'wsp_%'
+),
+    wsp_email as (
+    select id_wniosku, trim(LEADING 'wsp_' FROM email) email
+FROM wspolpasazerowie
+    Where email not like 'kl_%')
+)
+
+SELECT *
+FROM wspolpasazerowie;
+---
+
+
+
+---jeszcze inaczej ale w dobrym kierunku
+SELECT --id,
+  CASE
+  when email like 'kl_%' THEN trim(LEADING 'kl_' FROM email)
+  WHEN email like 'wsp_%' THEN trim(LEADING 'wsp_' FROM email)
+    end email_czysty,
+  count(1)
+    FROM wspolpasazerowie
+GROUP BY 1
+ORDER BY 2 DESC ;
+
+---wyliczone czesci
+SELECT --id,
+  CASE
+  when email like 'kl_%' THEN trim(LEADING 'kl_' FROM email)
+  WHEN email like 'wsp_%' THEN trim(LEADING 'wsp_' FROM email)
+    end email_czysty,
+  count(1),
+  count(1)/sum(1) OVER ()::NUMERIC*100 procentowy_udzial
+    FROM wspolpasazerowie
+GROUP BY 1
+ORDER BY 2 DESC ;
+
+--- Te trzy osoby pojawiły się najczęsciej we wnioskach email_534535@ids.com=1,9%, email21320@ids.com=1,9%, email1231344@ids.com = 1,8% całości liczby wniosków.
+
+
+
 --     Jaka część klientów pojawiła się na innych wnioskach jako współpasażer?
+
+
+SELECT
+  CASE
+    WHEN email like 'wsp_%' then 'wspolpasazer'
+    WHEN email LIKE 'kl_%' THEN  'klient'
+    END rodzaj_osoby,
+  count(email) l_osob,
+  sum(count(email)) OVER (),
+  count(email)/sum(count(email)) OVER ()*100 procent_calosci
+
+FROM wspolpasazerowie
+GROUP BY 1;
+
+---ODP---wspolpasazerowie stanowia 95 % wszystkich osob.
+
+
 --     Czy jako nowy klient mający kilka zakłóceń, od razu składasz kilka wniosków? Jaki jest czas od złożenia pierwszego do kolejnego wniosku?
---
+SELECT *
+FROM wnioski w
+     left join analizy_wnioskow a on w.id = a.id_wniosku
+  left JOIN podroze p ON w.id = p.id_wniosku
+  left join szczegoly_podrozy s2 ON p.id = s2.id_podrozy
+where pogoda_ok is TRUE and brak_strajku is TRUE AND atak_terr_ok is TRUE AND zaklocenie_ok is TRUE
+--GROUP BY
+
 -- DODATKOWE:
 -- Wyłudzenia
 --
