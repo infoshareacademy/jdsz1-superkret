@@ -460,49 +460,30 @@ ORDER BY 2 DESC;
 
 --     Jak często klient zmienia język (przeglądarki)? (kolumny: email, liczba zmian, czy ostatni jezyk wniosku zgadza sie z pierwszym jezykiem wniosku)
 
-SELECT jezyk,
-  count(k.id),
-  count(k.id)/sum(count(k.id)) OVER ()
-FROM wnioski
-JOIN klienci k ON wnioski.id = k.id_wniosku
-GROUP BY 1
-ORDER BY 2 DESC;
-
-
-
-with moje_dane AS ( -- krok 5. dodajemy WITH by zbudować łączenie tabel z podobnymi id_podróży
+WITH zmiany_jezykow as (
     SELECT
-      w.id,
-      w.stan_wniosku,
-      s2.identyfikator_podrozy,
-      s2.czy_zaklocony,
-    w.data_utworzenia --dodajemy datę by wyfiltrować
+      DISTINCT
+      email,
+      count(jezyk)
+      OVER (
+        PARTITION BY email ) liczba_zmian,
+      first_value(jezyk)
+      OVER (
+        PARTITION BY email ) pierwszy_jezyk,
+      last_value(jezyk)
+      OVER (
+        PARTITION BY email ) ostatni_jezyk
+
     FROM wnioski w
-      JOIN podroze p ON w.id = p.id_wniosku --krok 1. tabela która da nam id podrózy
+      JOIN klienci k ON w.id = k.id_wniosku
+    GROUP BY 1, jezyk
+    ORDER BY 2 DESC
+)
+SELECT email,liczba_zmian, (ostatni_jezyk = pierwszy_jezyk)ostatni_jezyk_zgadza_sie_z_pierwszym
+FROM zmiany_jezykow;
 
-      JOIN szczegoly_podrozy s2 ON p.id = s2.id_podrozy --tabela która da namdane dot podróży po id_podrózy
-    WHERE stan_wniosku in ('nowy', 'wyplacony') --krok 6. dodajemy 'wyplacony'
-          AND s2.identyfikator_podrozy NOT LIKE '%--%' --dzikie karty by wykluczyć wszystkie z błędnymi id po dwóch myślnikach
-          AND s2.czy_zaklocony = TRUE --filtrujemy tylko te które były zakłócone
-    ORDER BY 1),
 
-lista_podobnych AS (
-      SELECT md_nowe. id id_nowego, md_wyplacone.id id_wyplaconego
-      FROM moje_dane md_nowe
-        JOIN moje_dane md_wyplacone ON md_wyplacone.identyfikator_podrozy =
-                                       md_nowe.identyfikator_podrozy --krok 7. łączymy tą samą tabelę dwa razy - zmieniamy alias i dodjamey warunki łączenia i filtrowania
-      WHERE md_nowe.stan_wniosku = 'nowy' --dodajemy warunek by odfiltrować tylko nowe
-            AND md_wyplacone.stan_wniosku = 'wyplacony'
-            --krok 9. dodajemy warunek któ©y mówi że łączymy nowe wnioski z wypłaconymi - czyli cel zadania
-            --
-            AND md_wyplacone.data_utworzenia < md_nowe.data_utworzenia
-  )
 
-SELECT id_nowego, count(1),
-  count(DISTINCT id_wyplaconego) --dodajemy sprawdzenie czy na pewno 14 tys podobnych liczb
-FROM lista_podobnych
-GROUP BY 1
-ORDER BY 2 DESC ;
 
 
 --
