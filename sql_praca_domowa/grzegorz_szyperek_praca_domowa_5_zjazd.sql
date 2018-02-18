@@ -24,6 +24,66 @@ GROUP BY 2; --grupuję po operatorach
 
 -- 5) Przygotuj listę klientów z datą utworzenia ich pierwszego i drugiego wniosku. 3 kolumny: email, data 1wszego wniosku, data 2giego wniosku
 
+---pierwszy sposób--nieudany-
+WITH moje_dane as (
+    SELECT
+      kl.email,
+      w.data_utworzenia as pierwszy_wniosek
+
+    FROM klienci kl
+      JOIN wnioski w ON kl.id_wniosku = w.id
+GROUP BY 1, 2
+  ORDER BY 2
+),
+  drugi_wnios as (
+      SELECT
+        *,
+        nth_value(pierwszy_wniosek, 2)
+        OVER () drugi_wniosek
+      FROM moje_dane
+  ),
+  email_count as (
+      SELECT distinct email, count(email) liczba_email
+      FROM klienci
+    GROUP BY email
+        HAVING count(email) >1
+    ORDER BY 2 DESC
+  )
+  SELECT drugi_wnios.email, pierwszy_wniosek, drugi_wniosek
+FROM drugi_wnios, email_count;
+
+---pierwszy sposob - druga proba nieudana---
+
+WITH moje_dane as (
+    SELECT
+      kl.email,
+      w.data_utworzenia as pierwszy_wniosek
+
+    FROM klienci kl
+      JOIN wnioski w ON kl.id_wniosku = w.id
+GROUP BY 1, 2
+  ORDER BY 2
+),
+  drugi_wnios as (
+      SELECT
+        *,
+        nth_value(pierwszy_wniosek, 2)
+        OVER () drugi_wniosek
+      FROM moje_dane
+  ),
+  moje_dane_zwei as(
+SELECT *, count(email) over (PARTITION BY email) l_wnios--DISTINCT email, count(email) liczba_email, pierwszy_wniosek, drugi_wnios
+FROM drugi_wnios
+GROUP BY email, pierwszy_wniosek, drugi_wniosek
+ORDER BY 4 desc
+  )
+SELECT DISTINCT email, pierwszy_wniosek, drugi_wniosek
+FROM moje_dane_zwei
+WHERE l_wnios > 2;
+
+
+
+
 ---drugi sposob----
 WITH moje_dane as (
     SELECT
@@ -489,5 +549,119 @@ FROM zmiany_jezykow;
 --
 -- DODATKOWE:
 -- 1) Analogicznie do przewidywania wniosków: wykonaj predykcję liczby leadów (także na aktualny miesiąc, predykcja do końca miesiąca)
+
+
+
+
+
 -- 2) Analogicznie do przewidywania wniosków: wykonaj predykcję liczby zanalizowanych wniosków (także na aktualny miesiąc, predykcja do końca miesiąca)
+
+SELECT *
+FROM analizy_wnioskow
+
+
+with moje_daty as (select -- to jest odpowiedzialne za wygenerowanie dat z przyszlosci
+ generate_series(
+     date_trunc('day', '2018-01-20'::date), -- jaki jest pierwszy dzien generowania - jest DAY bo chcemy wygnereować od konkretnego dnia na nie miesiąca czy roku
+     date_trunc('month', now())+interval '1 month'-interval '1 day', -- koncowy dzien generowania
+     '1 day')::date as wygenerowana_data --interwał, co ile dni/miesiecy/tygodni dodawac kolejne rekordy
+ ),
+
+aktualne_wnioski as ( -- to jest kawalek odpowiedzialny za aktualna liczba wnioskow
+   select to_char(w.data_utworzenia, 'YYYY-MM-DD')::date data_wniosku, count(1) liczba_wnioskow
+   --sum(count(1)) OVER () suma_wnios
+   from wnioski w
+     JOIN analizy_wnioskow a ON w.id = a.id_wniosku   ---JEDYNA ZMIANA W TYM KODZIE :P
+   group by 1
+ ),
+
+lista_z_wnioskami as (
+select md.wygenerowana_data, -- dla danej daty
+  coalesce(liczba_wnioskow, 0) liczba_wnioskow,-- powiedz ile bylo wnioskow w danym dniu
+ sum(aw.liczba_wnioskow) over(order by md.wygenerowana_data) skumulowana_liczba_wnioskow -- laczna liczba wnioskow dzien po dniu
+from moje_daty md
+left join aktualne_wnioski aw on aw.data_wniosku = md.wygenerowana_data --left join dlatego, ze niektore dni nie maja jeszcze wnioskow. wlasnie dla nich bede robil predykcje
+order by 1
+  ),
+
+statystyki_dnia AS (
+      SELECT
+        to_char(wygenerowana_data, 'Day') dzien,
+        round(avg(liczba_wnioskow)) przewidywana_liczba_wnioskow --zaokrąglenie  ---zmieniona nazwa by była odpowiadająca do naszej predykcji
+      FROM lista_z_wnioskami
+      WHERE wygenerowana_data <= '2018-02-09'
+      GROUP BY 1
+      ORDER BY 1
+  )
+
+SELECT lw.wygenerowana_data,liczba_wnioskow,  przewidywana_liczba_wnioskow,
+  CASE
+  WHEN  wygenerowana_data <= '2018-02-09' then liczba_wnioskow
+  ELSE przewidywana_liczba_wnioskow END final_l_wnios,
+  sum(CASE
+  WHEN  wygenerowana_data <= '2018-02-09' then liczba_wnioskow
+  ELSE przewidywana_liczba_wnioskow END) OVER (ORDER BY wygenerowana_data) kumulacja_lotto
+
+
+FROM lista_z_wnioskami lw
+JOIN statystyki_dnia sd ON sd.dzien =to_char(lw.wygenerowana_data, 'Day')   ---do listy z wnioksmai chcę dodać dane takie jak nazwy dni tygodnia oraz dodać liczbę wniosków
+
 -- 3) Analogicznie do przewidywania wniosków: wykonaj predykcję liczby wysłanych maili w kampaniach (także na aktualny miesiąc, predykcja do końca miesiąca)
+
+SELECT to_char(data_kampanii, 'YYYY-MM-DD')::date data_kampanii,
+  count(1) liczba_email
+FROM m_kampanie mk
+left JOIN m_email e ON mk.id = e.id_kampanii
+GROUP BY 1
+ORDER BY 1 DESC
+
+
+SELECT count(id)
+FROM
+m_email
+
+with moje_daty as (select -- to jest odpowiedzialne za wygenerowanie dat z przyszlosci
+ generate_series(
+     date_trunc('day', '2018-01-20'::date), -- jaki jest pierwszy dzien generowania - jest DAY bo chcemy wygnereować od konkretnego dnia na nie miesiąca czy roku
+     date_trunc('month', now())+interval '1 month'-interval '1 day', -- koncowy dzien generowania
+     '1 day')::date as wygenerowana_data --interwał, co ile dni/miesiecy/tygodni dodawac kolejne rekordy
+ ),
+
+aktualne_email as (
+SELECT to_char(data_kampanii, 'YYYY-MM-DD')::date daty_emaili,
+  count(1) liczba_email
+FROM m_kampanie mk
+left JOIN m_email e ON mk.id = e.id_kampanii
+GROUP BY 1
+    ORDER BY 1 DESC
+  ),
+lista_z_emailami as (
+      SELECT wygenerowana_data,
+      coalesce(liczba_email, 0) l_emaili,
+      sum(coalesce(liczba_email, 0)) OVER ( ORDER BY wygenerowana_data) skumulowana_l_emaili
+    FROM moje_daty
+    LEFT JOIN aktualne_email ON daty_emaili=wygenerowana_data
+    ORDER BY 1
+),
+statystyki_dnia AS (
+      SELECT
+        to_char(wygenerowana_data, 'Day') dzien,
+        round(avg(l_emaili)) przewidywana_liczba_emaili --zaokrąglenie  ---zmieniona nazwa by była odpowiadająca do naszej predykcji
+      FROM lista_z_emailami
+      WHERE wygenerowana_data <= '2018-02-09'
+      GROUP BY 1
+      ORDER BY 1
+  )
+
+SELECT lze.wygenerowana_data,l_emaili,  przewidywana_liczba_emaili,
+  CASE
+  WHEN  wygenerowana_data <= '2018-02-09' then l_emaili
+  ELSE przewidywana_liczba_emaili END final_l_emaili,
+  sum(CASE
+  WHEN  wygenerowana_data <= '2018-02-09' then l_emaili
+  ELSE przewidywana_liczba_emaili END) OVER (ORDER BY wygenerowana_data) kumulacja_lotto
+
+
+FROM lista_z_emailami lze
+JOIN statystyki_dnia sd ON sd.dzien =to_char(lze.wygenerowana_data, 'Day')   ---do listy z wnioksmai chcę dodać dane takie jak nazwy dni tygodnia oraz dodać liczbę wniosków
+;
