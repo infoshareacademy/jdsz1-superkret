@@ -1,0 +1,8 @@
+-- JD8- 7.
+-- % zależność między kwotami 250/400/600 ?
+
+SELECT kwota, count(1), sum(count(1)) OVER (),
+  round(count(1)/ sum(count(1)) over() *100, 2)
+from szczegoly_rekompensat
+where kwota in (250,400,600)
+GROUP BY 1;
