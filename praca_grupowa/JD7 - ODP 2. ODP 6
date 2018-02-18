@@ -1,0 +1,18 @@
+-- JD7- 2.
+-- Liczba wniosków w zależności od statusu/ pIOTROWI CHODZIŁO O STAN_WNIOSKU
+SELECT  stan_wniosku, count(1)
+FROM wnioski
+GROUP BY 1;
+-- liczymy z tego procent
+SELECT  stan_wniosku, count(1), sum(count(1)) over(),
+  round(count(1)/sum(count(1)) OVER() *100,2)
+FROM wnioski
+GROUP BY 1;
+
+-- JD7 -6.
+-- Jaki jest % stosunek typu wniosków?
+
+SELECT typ_wniosku, count(1), sum(count(1)) OVER (),
+  round(count(1)/sum(count(1)) OVER () *100, 2)
+from wnioski
+GROUP BY 1;
