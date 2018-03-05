@@ -1,13 +1,13 @@
--- liczba odrzuconych / zaakceptowanych / wniosków
+-- liczba odrzuconych / zaakceptowanych / wnioskÃ³w
 with wniosekagenta as(
-select id_agenta,
+select id_agenta, count(w.id), -- dodany countwszystkich wnioskow
   count(CASE WHEN aw.status = 'odrzucony' then w.id END ) wnioski_odrzucone,
   count(CASE WHEN aw.status = 'zaakceptowany' then w.id END ) wnioski_zaakceptowane
 from wnioski w
 JOIN analizy_wnioskow aw ON w.id = aw.id_wniosku
 GROUP BY 1
 ),
-  --liczba zapytañ o dokumenty
+  --liczba zapytaÅ„ o dokumenty
   dokumentyagenta as(
   SELECT agent_id, count(1) oczekiwane_dokumenty
   FROM dokumenty
@@ -38,3 +38,4 @@ from wniosekagenta wa
 LEFT JOIN dokumentyagenta da on da.agent_id=wa.id_agenta
 LEFT JOIN procesowanelinie pl on pl.agent_id=wa.id_agenta
 LEFT JOIN analizyprawnicze ap on ap.agent_id=wa.id_agenta
+GROUP BY 2 DESC;   -- DODANO GRUPOWANIE, grupuje od najefektywniejszego agenta
