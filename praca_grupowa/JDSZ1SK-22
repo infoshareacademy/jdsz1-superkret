@@ -1,0 +1,12 @@
+-- Liczba wniosków w zależności od statusu/ pIOTROWI CHODZIŁO O STAN_WNIOSKU
+SELECT  stan_wniosku, count(1)
+FROM wnioski
+GROUP BY 1;
+-- liczymy z tego procent
+SELECT  stan_wniosku, count(1) liczba_wnioskow, sum(count(1)) over() suma,
+  round(count(1)/sum(count(1)) OVER() *100,2) udzial_proc
+FROM wnioski
+GROUP BY 1;
+
+-- jest ok
+-- dodałam aliasy żeby było przejrzyściej

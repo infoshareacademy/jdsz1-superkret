@@ -13,7 +13,8 @@
 FROM wnioski w
 JOIN podroze p ON w.id = p.id_wniosku
 JOIN szczegoly_podrozy s2 ON p.id = s2.id_podrozy
-GROUP BY 2;
+GROUP BY 2
+ORDER BY 1;  -- DODAŁAM ORDER BY DLA CZYTELNOŚCI
 ---------------------------------------------
 
 

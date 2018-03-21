@@ -1,0 +1,195 @@
+-- OBOWIAZKOWE:
+-- 1) Jaka data była 8 dni temu?
+SELECT now()::date - INTERVAL '8 days'; -- zeby w tabeli nazwa ze to 8 dzien?
+-- uwaga; jak nazwać kolumnę? alias'em nie mozna
+
+-- 2) Jaki dzień tygodnia był 3 miesiące temu?
+SELECT now()::date - INTERVAL '3 months';
+
+-- 3) W którym tygodniu roku jest 01 stycznia 2017?
+SELECT TO_CHAR('2017-01-01'::date, 'WW') nr_tyg;
+
+-- 4) Podaj listę wniosków z właściwym operatorem (który rzeczywiście przeprowadził trasę)
+SELECT count(w.id),
+  coalesce(identyfikator_operator_operujacego, identyfikator_operatora ) oper_wlas --wyłapuje NULL
+from wnioski w
+JOIN podroze p ON w.id = p.id_wniosku
+JOIN szczegoly_podrozy s2 ON p.id = s2.id_podrozy
+GROUP BY 2;
+
+-- 5) Przygotuj listę klientów z datą utworzenia ich pierwszego i drugiego wniosku. 3 kolumny: email, data 1wszego wniosku, data 2giego wniosku
+WITH dane AS (
+    SELECT DISTINCT
+      k.email,
+      first_value(w.data_utworzenia)
+      OVER (
+        PARTITION BY k.email
+        ORDER BY w.data_utworzenia ) data_1,
+      nth_value(w.data_utworzenia, 2)
+      OVER (
+        PARTITION BY k.email
+        ORDER BY w.data_utworzenia ) data_2
+    FROM klienci k
+      JOIN wnioski w ON k.id_wniosku = w.id
+)
+
+SELECT *
+FROM dane
+WHERE data_2 IS NOT NULL ;
+--  odp to 1 klient, chyba nie jest dobrze, ale zapytanie żle skonstruowane
+
+-- 6) Używając pełen kod do predykcji wniosków, zmień go tak aby uwzględnić kampanię marketingową, która odbędzie się 26 lutego - przewidywana liczba wniosków z niej to 1000
+with moje_daty as (select -- wygenerowanie dat z przyszlosci
+ generate_series(
+     date_trunc('day', '2018-01-20'::date),
+     date_trunc('month', now())+interval '1 month'-interval '1 day',
+     '1 day')::date as wygenerowana_data
+ ),
+
+aktualne_wnioski as ( -- to aktualna liczba wnioskow
+   select to_char(data_utworzenia, 'YYYY-MM-DD')::date data_wniosku, count(1) liczba_wnioskow
+   from wnioski
+   group by 1
+ ),
+
+lista_z_wnioskami as (
+select md.wygenerowana_data,
+  coalesce(liczba_wnioskow, 0) liczba_wnioskow,
+ sum(aw.liczba_wnioskow) over(order by md.wygenerowana_data) skumulowana_liczba_wnioskow
+from moje_daty md
+left join aktualne_wnioski aw on aw.data_wniosku = md.wygenerowana_data
+order by 1
+  ),
+
+statystyki_dnia AS (
+      SELECT
+        to_char(wygenerowana_data, 'Day') dzien,
+        round(avg(liczba_wnioskow)) przewidywana_liczba_wnioskow
+      FROM lista_z_wnioskami
+      WHERE wygenerowana_data <= '2018-02-09'
+      GROUP BY 1
+      ORDER BY 1
+  )
+
+SELECT lw.wygenerowana_data,liczba_wnioskow,  przewidywana_liczba_wnioskow,
+  CASE
+  WHEN  wygenerowana_data <= '2018-02-09' then liczba_wnioskow
+    WHEN wygenerowana_data = '2018-02-26' then 1000
+  ELSE przewidywana_liczba_wnioskow
+  END final_l_wnios,
+  sum(
+      CASE
+  WHEN  wygenerowana_data <= '2018-02-09' then liczba_wnioskow
+         WHEN wygenerowana_data = '2018-02-26' then 1000
+  ELSE przewidywana_liczba_wnioskow
+      END) OVER (ORDER BY wygenerowana_data) kumulacja_lotto
+
+
+FROM lista_z_wnioskami lw
+JOIN statystyki_dnia sd ON sd.dzien =to_char(lw.wygenerowana_data, 'Day')
+;
+-- 7) Używając pełen kod do predykcji wniosków, zmień go tak aby uwzględnić przymusową przerwę serwisową, w sobotę 24 lutego nie będzie można utworzyć żadnych wniosków
+with moje_daty as (select
+ generate_series(
+     date_trunc('day', '2018-01-20'::date),
+     date_trunc('month', now())+interval '1 month'-interval '1 day',
+     '1 day')::date as wygenerowana_data
+ ),
+
+aktualne_wnioski as (
+   select to_char(data_utworzenia, 'YYYY-MM-DD')::date data_wniosku, count(1) liczba_wnioskow
+   from wnioski
+   group by 1
+ ),
+
+lista_z_wnioskami as (
+select md.wygenerowana_data,
+  coalesce(liczba_wnioskow, 0) liczba_wnioskow,
+ sum(aw.liczba_wnioskow) over(order by md.wygenerowana_data) skumulowana_liczba_wnioskow
+from moje_daty md
+left join aktualne_wnioski aw on aw.data_wniosku = md.wygenerowana_data
+order by 1
+  ),
+
+statystyki_dnia AS (
+      SELECT
+        to_char(wygenerowana_data, 'Day') dzien,
+        round(avg(liczba_wnioskow)) przewidywana_liczba_wnioskow
+      FROM lista_z_wnioskami
+      WHERE wygenerowana_data <= '2018-02-09'
+      GROUP BY 1
+      ORDER BY 1
+  )
+
+SELECT lw.wygenerowana_data,liczba_wnioskow,  przewidywana_liczba_wnioskow,
+  CASE
+  WHEN  wygenerowana_data <= '2018-02-09' then liczba_wnioskow
+    WHEN wygenerowana_data = '2018-02-24' then 0
+    WHEN wygenerowana_data = '2018-02-26' then 1000
+  ELSE przewidywana_liczba_wnioskow
+  END final_liczba_wnioskow,
+  sum(
+      CASE
+  WHEN  wygenerowana_data <= '2018-02-09' then liczba_wnioskow
+        WHEN wygenerowana_data = '2018-02-24' then 0
+         WHEN wygenerowana_data = '2018-02-26' then 1000
+  ELSE przewidywana_liczba_wnioskow
+      END) OVER (ORDER BY wygenerowana_data) policzone_wszystkie
+
+
+FROM lista_z_wnioskami lw
+JOIN statystyki_dnia sd ON sd.dzien =to_char(lw.wygenerowana_data, 'Day')
+;
+
+-- 8) Ile (liczbowo) wniosków zostało utworzonych poniżej mediany liczonej z czasu między lotem i wnioskiem?
+WITH mediana AS (
+    SELECT
+      percentile_cont(0.5)
+      WITHIN GROUP (ORDER BY (w.data_utworzenia - s2.data_wyjazdu)) mediana
+    FROM wnioski w
+    JOIN podroze p ON w.id = p.id_wniosku
+    JOIN szczegoly_podrozy s2 ON p.id = s2.id_podrozy
+)
+
+SELECT count (
+    CASE when m.mediana > (w.data_utworzenia - s2.data_wyjazdu) then 1 end) ponizej_mediana
+from wnioski w
+JOIN podroze p ON w.id = p.id_wniosku
+JOIN szczegoly_podrozy s2 ON p.id = s2.id_podrozy
+join mediana m on TRUE -- czy to tak można? bo znalazłam w internetach :) join mediana as it True albo 1=1 ale to niby w postgresie lepiej napisac ze True
+;
+
+-- 9) Mając czas od utworzenia wniosku do jego analizy rzygotuj statystyke:
+--
+-- jaka jest mediana czasu?
+-- jaka jest srednia czasu?
+-- jakie mamy wartości odstające?
+-- ile jest wnioskow ponizej p75?
+-- ile jest wnioskow powyzej p25?
+-- czy te dane znacząco roznią się jesli rozbijemy je na zaakceptowane i odrzucone?
+
+
+-- 10) Chcę bardziej spersonalizować naszą stronę internetową pod wymagania klientów. Aby to zrobić potrzebuję analizy dotyczącej języków używanych przez klientów:
+-- Jakich języków używają klienci? (kolumny: jezyk, liczba klientow, % klientow)
+SELECT jezyk,
+  count(k.id),
+  count(k.id)/sum(count(k.id)) OVER()
+FROM wnioski
+join klienci k ON wnioski.id = k.id_wniosku
+GROUP BY 1
+ORDER BY 2 DESC;
+
+-- Jak często klient zmienia język (przeglądarki)? (kolumny: email, liczba zmian, czy ostatni jezyk wniosku zgadza sie z pierwszym jezykiem wniosku)
+With zmina_jezyk AS (
+  SELECT DISTINCT email,
+  count(jezyk) OVER (PARTITION BY email) ile_zmian,
+  first_value(jezyk) OVER (PARTITION BY email) pierw_jezyk,
+  last_value(jezyk) OVER (PARTITION BY email) ostatni_jezyk
+FROM wnioski w
+JOIN klienci k ON w.id = k.id_wniosku
+GROUP BY 1, jezyk
+ORDER BY 2 DESC
+)
+
+SELECT email, ile_zmian, (ostatni_jezyk = pierw_jezyk) Zdadza_sie_pierw_ostatni
+FROM zmina_jezyk;

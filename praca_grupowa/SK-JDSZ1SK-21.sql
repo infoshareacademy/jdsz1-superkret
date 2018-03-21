@@ -10,7 +10,7 @@ join szczegoly_podrozy s2 on p.id = s2.id_podrozy
 
 WHERE
   czy_zaklocony = true
-  and w.data_utworzenia - s2.data_wyjazdu > '3 years'
+  and w.data_utworzenia - s2.data_wyjazdu > '3 years' and w.id <> 37074
 
 
 
@@ -20,3 +20,4 @@ WHERE
 
 --przydałby sie odpowiednie aliasy kolumn by tester nie musial się przemęczać :P
 
+--- test 2 --- wyrzuciłam rekord, w którym czas podróży datowany był na 1012 r. :)
