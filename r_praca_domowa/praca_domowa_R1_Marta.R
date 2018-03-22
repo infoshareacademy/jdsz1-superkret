@@ -245,3 +245,91 @@ df_comp_small
 
 #30) Create function f_agent_stats which for given agent_id, will return total number of actions in all tables 
 #(analiza_wniosku, analiza_operatora etc)
+
+# ładuję tabele zawierające id agenta (5)
+
+library("RPostgreSQL")
+drv <- dbDriver("PostgreSQL")
+dbExistsTable(con, "szczegoly_rekompensat")
+con <- dbConnect(drv, dbname = "postgres", host = "localhost", port = 5433,
+                 user = "postgres",
+                 password = "020309") # to nie jest dobra praktyka na haslo, powinno byc wzmiennych środowiskowych
+
+dbExistsTable(con, "analiza_wnioskow")
+
+db_szczeg_rekom <- dbReadTable(con, "szczegoly_rekompensat")
+db_analiza_wnios <- dbReadTable(con, "analizy_wnioskow")
+db_analiza_prawna <- dbReadTable(con, "analiza_prawna")
+db_analiza_operatora <- dbReadTable(con, "analiza_operatora")
+db_dokumenty <- dbReadTable(con, "dokumenty")
+
+# z pobranych tabel wyciągam kolumny z id agenta oraz liczbę wierszy (do użycia w pętli)
+
+agent_sr <- db_szczeg_rekom$id_agenta
+d<-agent_sr[[1]]
+l_sr<- length(agent_sr)
+
+agent_aw <- db_analiza_wnios$id_agenta
+l_aw <- length(agent_aw)
+
+agent_ap <- db_analiza_prawna$agent_id
+l_ap <- length(agent_ap)
+
+agent_ao <- db_analiza_operatora$agent_id
+l_ao <- length(agent_ao)
+
+agent_d <- db_dokumenty$agent_id
+l_d <- length(agent_d)
+
+# tworzę funkcję opierającą się na pętlach zliczających dla poszczególnych kolumn ilość wystąpień danego agenta
+
+f_agent_stats <- function(id_agenta) {
+  
+  wartosc_1 = 0
+  for(id in 1:l_sr) {
+    if( agent_sr[id] == id_agenta) wartosc_1<-wartosc_1+1
+  } 
+  wartosc_1
+  
+  wartosc_2 = 0
+  for(id in 1:l_aw) {
+    if( agent_aw[id] == id_agenta) wartosc_2<-wartosc_2+1
+  } 
+  wartosc_2
+  
+  
+  wartosc_3 = 0
+  for(id in 1:l_ap) {
+    if( agent_ap[id] == id_agenta) wartosc_3<-wartosc_3+1
+  } 
+  wartosc_3
+  
+  wartosc_4 = 0
+  for(id in 1:l_ao) {
+    if( agent_ao[id] == id_agenta) wartosc_4<-wartosc_4+1
+  } 
+  wartosc_4
+  
+  wartosc_5 = 0
+  for(id in 1:l_d) {
+    if( agent_d[id] == id_agenta) wartosc_5<-wartosc_5+1
+  } 
+  wartosc_5
+  
+  
+  wartosc_6 <- wartosc_1+wartosc_2+wartosc_3+wartosc_4+wartosc_5
+  return(wartosc_6)
+}
+
+#sprawdzam czy funkcja wykonuje się
+f_agent_stats(34)  # sprawdzam dla agenta 34 - liczba wystąpień 56
+
+
+# drugi sposób po zrobieniu pierwszego i szukaniu łatwiejszego sposobu w google
+
+f_agent_stats_2<- function(id_ag) {
+  wartosc_ag<- sum(agent_aw==id_ag) + sum(agent_ao==id_ag) + sum(agent_ap==id_ag) + sum(agent_d==id_ag) + sum(agent_sr==id_ag)
+  return (wartosc_ag)
+}
+
+f_agent_stats_2(34)  # sprawdzam dla agenta 34 - liczba wystąpień 56
