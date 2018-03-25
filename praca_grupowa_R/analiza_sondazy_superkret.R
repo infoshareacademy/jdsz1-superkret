@@ -1,3 +1,7 @@
+library(tidyverse)
+library(lubridate)
+library(scales)
+
 active_packages <- function(pkg){
   new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
   if (length(new.pkg))
@@ -6,8 +10,6 @@ active_packages <- function(pkg){
   print("packages ready")
 }
 packages <- c("devtools", "openxlsx", "RPostgreSQL", "dplyr", "XML", "RCurl")
-
-
 active_packages(packages)
 
 link <- "https://docs.google.com/spreadsheets/d/1P9PG5mcbaIeuO9v_VE5pv6U4T2zyiRiFK_r8jVksTyk/htmlembed?single=true&gid=0&range=a10:o400&widget=false&chrome=false"
@@ -19,8 +21,6 @@ dane_z_html2 <-dane_z_html[2:nrow(dane_z_html),]
 for(col in 8:16) {
   dane_z_html2[, col] <-  as.numeric(gsub(",", ".", dane_z_html2[, col]))
 }
-dane_z_html2
-library(tidyverse)
 
 
 #zmiana nazw kolumn
@@ -30,22 +30,19 @@ dane_z_html2
 
 # ggplot - K15 results - 53
 #JDSZ1SK-49 Project R 1 - election polls K15 - JDSZ1SK-53
-
-
-library(lubridate)
-library(scales)
 dane_z_html2$Publikacja <- dmy(dane_z_html2$Publikacja)
 
 #
 ggplot(data = dane_z_html2, mapping = aes(x = Publikacja, y = K15/100)) +
   geom_point(mapping = aes(color = osrodek)) +
   geom_smooth() +
-  xlab("Data publikacji sonda¿u") +
-  ylab("Wartoœci procentowe - Kukiz'15") +
+  xlab("Data publikacji sondaï¿½u") +
+  ylab("Wartoï¿½ci procentowe - Kukiz'15") +
   scale_y_continuous(labels= percent_format())
-  
 
 
-
-
-
+ggplot(data = dane_z_html2) +
+  geom_point(mapping=aes(x = Publikacja, y = PARTIA_RAZEM/100, color = osrodek))+
+  geom_smooth(mapping=aes(x = Publikacja, y = PARTIA_RAZEM/100))+
+  scale_y_continuous(labels = percent_format())
+  theme(axis.text.x=element_text(angle = 90,hjust = 1))
