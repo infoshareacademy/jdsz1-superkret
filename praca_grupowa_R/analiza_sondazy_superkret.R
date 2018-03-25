@@ -29,28 +29,21 @@ dane_z_html2
 
 
 # ggplot - K15 results - 53
-
-
-#Please create ggplot chart with:
-  
-# points
-#smooth
-#for following data:
-  
-# time  Publikacja x
-#results   K15 y
-#research center  kolor/linia
-
+#JDSZ1SK-49 Project R 1 - election polls K15 - JDSZ1SK-53
 
 
 library(lubridate)
+library(scales)
 dane_z_html2$Publikacja <- dmy(dane_z_html2$Publikacja)
 
 #
-ggplot(data = dane_z_html2, mapping = aes(x = Publikacja, y = K15)) +
+ggplot(data = dane_z_html2, mapping = aes(x = Publikacja, y = K15/100)) +
   geom_point(mapping = aes(color = osrodek)) +
-  geom_smooth()
-  #geom_smooth(span = 0.75)
+  geom_smooth() +
+  xlab("Data publikacji sonda¿u") +
+  ylab("Wartoœci procentowe - Kukiz'15") +
+  scale_y_continuous(labels= percent_format())
+  
 
 
 
