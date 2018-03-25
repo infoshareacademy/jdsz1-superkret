@@ -216,3 +216,8 @@ posortowane_best_agent
 f_agent_stats <- function(x,y){
   if best_agent 
 }
+
+help
+
+
+
