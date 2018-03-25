@@ -1,3 +1,8 @@
+install.packages("lubridate")
+library(lubridate)
+library(tidyverse)
+
+
 active_packages <- function(pkg){
   new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
   if (length(new.pkg))
@@ -20,9 +25,19 @@ for(col in 8:16) {
   dane_z_html2[, col] <-  as.numeric(gsub(",", ".", dane_z_html2[, col]))
 }
 dane_z_html2
-library(tidyverse)
+
+dane_z_html2$Publikacja <- dmy(dane_z_html2$Publikacja)
 
 
 #zmiana nazw kolumn
-colnames(dane_z_html2)[c(1, 2,5, 6, 7, 10)]=cbind("lp", "osrodek", "metoda_badania", "uwzgl_niezdec", "termin_badania", "K15" )
+colnames(dane_z_html2)[c(1, 2,5, 6, 7, 10)]=cbind("lp", "osrodek", "metoda_badania", "uwzgl_niezdec", "termin_badania", "K15")
 dane_z_html2
+
+
+ggplot(data=dane_z_html2) +
+  geom_point(mapping = aes
+             (x=as.Date(Publikacja, "%d%m%y"), y=PiS, color=osrodek))+
+  geom_smooth(mapping = aes(
+    x=Publikacja, y=PiS, color=osrodek))+
+  theme(axis.text.x=element_text(angle = 90,hjust = 1))
+
