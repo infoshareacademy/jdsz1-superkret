@@ -206,16 +206,43 @@ df_comp_small$amount_category <- ifelse(df_comp_small$df_compensations.kwota > a
 # 30) Create function f_agent_stats which for given agent_id, will return total number of actions in all tables (analiza_wniosku, analiza_operatora etc)
 
 
-best_agent <-  data.frame(df_comp_small%>%
-                            group_by(df_comp_small$df_compensations.id_agenta)%>%
-                            summarise(rows_per_account=n(),value_of_recompensations=sum(df_compensations.kwota)))
+?dbGetQuery
+on.exit(dbDisconnect(con))
 
-posortowane_best_agent <- arrange(best_agent, desc(rows_per_account), desc(value_of_recompensations))
-posortowane_best_agent
 
-f_agent_stats <- function(x,y){
-  if best_agent 
+id_agenta <- "168"
+rm(id_agenta)
+
+f_agent_stats <- function(agencik){
+  SQL_an_wnios <- paste("SELECT * FROM analizy_wnioskow WHERE id_agenta =", as.character(agencik))
+  SQL_an_wnios
+  df_an_wnios <- data.frame(dbGetQuery(con, SQL_an_wnios))
+  SQL_an_oper <- paste("SELECT * FROM analiza_operatora WHERE agent_id =", as.character(agencik))
+  SQL_an_oper
+  df_an_oper <- data.frame(dbGetQuery(con, SQL_an_oper))
+  SQL_an_prawn <- paste("SELECT * FROM analiza_prawna WHERE agent_id =", as.character(agencik))
+  SQL_an_prawn
+  df_an_prawn <- data.frame(dbGetQuery(con, SQL_an_prawn))
+  SQL_dok <- paste("SELECT * FROM dokumenty WHERE agent_id =", as.character(agencik))
+  SQL_dok
+  df_dok <- data.frame(dbGetQuery(con, SQL_dok))
+  SQL_szcz_reko <- paste("SELECT * FROM szczegoly_rekompensat WHERE id_agenta =", as.character(agencik))
+  SQL_szcz_reko
+  df_szcz_reko <- data.frame(dbGetQuery(con, SQL_szcz_reko))
+  on.exit(dbDisconnect(con))
+  
+  print(summary(df_an_wnios))
+  print(summary(df_an_oper))
+  print(summary(df_an_prawn))
+  print(summary(df_dok))
+  print(summary(df_szcz_reko))
+
 }
+
+f_agent_stats(id_agenta)
+
+??RPostgreSQL
+
 
 help
 
