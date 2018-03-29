@@ -39,7 +39,7 @@ m #możemy wyświetlić ponieważ ma tylko 5 kolumn
 
 v <- sort(rowSums(m),decreasing=TRUE) # sumujemy poszczególne słowa
 v
-d <- data.frame(word = names(v), lp=v)
+d <- data.frame(word = names(v), freq=v)
 d
 
 ####################################################################
