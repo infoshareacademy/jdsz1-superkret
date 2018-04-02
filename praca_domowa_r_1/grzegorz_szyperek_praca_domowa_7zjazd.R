@@ -206,20 +206,7 @@ df_comp_small$amount_category <- ifelse(df_comp_small$df_compensations.kwota > a
 # 30) Create function f_agent_stats which for given agent_id, will return total number of actions in all tables (analiza_wniosku, analiza_operatora etc)
 
 
-best_agent <-  data.frame(df_comp_small%>%
-                            group_by(df_comp_small$df_compensations.id_agenta)%>%
-                            summarise(rows_per_account=n(),value_of_recompensations=sum(df_compensations.kwota)))
 
-posortowane_best_agent <- arrange(best_agent, desc(rows_per_account), desc(value_of_recompensations))
-posortowane_best_agent
-
-f_agent_stats <- function(id_agenta,nazwa_tabeli){
-   analizy_wnioskow <- data.frame(dbGetQuery(con, SQL_idagenta))
-}
-
-abcd <- data.frame(dbGetQuery(con, SQL_idagenta))
-class(abcd)
-summary(abcd)
 ?dbGetQuery
 on.exit(dbDisconnect(con))
 
