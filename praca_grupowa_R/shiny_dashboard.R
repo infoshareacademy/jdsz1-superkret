@@ -1,19 +1,36 @@
-library(shinydashboard)
-library(RPostgreSQL)
-library(plyr)
-library(dplyr)
-library(scales)
-library(wordcloud)
-library(syuzhet)
-library(tidyverse)
-library(devtools)
-library(shiny)
-library(RCurl)
-library(XML)
-library(lubridate)
-library(stringr)
-library(ggplot2)
-library(DT)
+# library(shinydashboard)
+# library(RPostgreSQL)
+# library(plyr)
+# library(dplyr)
+# library(scales)
+# library(wordcloud)
+# library(syuzhet)
+# library(tidyverse)
+# library(devtools)
+# library(shiny)
+# library(RCurl)
+# library(XML)
+# library(lubridate)
+# library(stringr)
+# library(ggplot2)
+# library(DT)
+
+#Okomentowałem i zamieniłem wczytywane biblio bo nie u każdego z nas mogą byz zainstalowane te biblioteki. Dlatego wrzuciłem poniższą funkcję plus nazwy tych biblio jako wektor i funkcję z 
+#odwołaniem do wektora
+
+active_packages <- function(pkg){
+  new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+  if (length(new.pkg))
+    install.packages(new.pkg, dependencies = TRUE)
+  sapply(pkg, require, character.only = TRUE)
+  print("packages ready")
+}
+packages <- c("devtools", "plyr", "RPostgreSQL", "dplyr", "shinydashboard", "scales", "wordcloud", "syuzhet", "tidyverse", "shiny", "RCurl", "XML", "lubridate", "stringr", "ggplot2", "DT")
+
+
+active_packages(packages)
+
+?icon
 
 ui <- dashboardPage(
   dashboardHeader(title = "Analiza Partii wyborczych"),
@@ -21,7 +38,8 @@ ui <- dashboardPage(
     sidebarMenu(id = "tab",
                 menuItem("Sondaze", tabName = "wykresypartii"),
                 menuItem("Tabela Sondazy", tabName = "electpoll"),
-                menuItem("Tabela Sondazy1", tabName = "electpoll1")
+                menuItem("Tabela Sondazy1", tabName = "electpoll1"),
+                menuItem("Text Mining", tabName = "textmining", icon = icon("book-heart", lib = "font-awesome"))
     )),
   dashboardBody(
     tabItems(
@@ -30,9 +48,16 @@ ui <- dashboardPage(
               plotOutput("wybranapartia")),
       tabItem(tabName = "electpoll", h1("Wyniki wyborow"), tableOutput("epr")),
       tabItem(tabName = "electpoll1",h1("Wybierz sam jakiego osrodka sondaz chcesz zobaczyc"),
-              uiOutput("wyborosrodka"),tableOutput("tabelaosrodek") )
+              uiOutput("wyborosrodka"),
+              tableOutput("tabelaosrodek")),
+      tabItem(tabName = "textmining", h1("TO JEST TEXT MINING"), tableOutput(""),
+              fluidRow(
+        box(
+          title = "Czeste Slowa",
+          numericInput(inputId = "")
+        )))
     )
-  ))
+  )
 
 server <- function(input, output){
   link <- "https://docs.google.com/spreadsheets/d/1P9PG5mcbaIeuO9v_VE5pv6U4T2zyiRiFK_r8jVksTyk/htmlembed?single=true&gid=0&range=a10:o400&widget=false&chrome=false"
