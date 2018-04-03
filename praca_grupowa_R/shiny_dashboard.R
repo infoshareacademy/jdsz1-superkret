@@ -1,3 +1,6 @@
+#Wykonali: SUPER KRETTO
+#JDSZ1SK-49 Project R 1 - election polls - ShinyDashboards - JDSZ1SK-70
+
 active_packages <- function(pkg){
   new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
   if (length(new.pkg))
@@ -5,20 +8,14 @@ active_packages <- function(pkg){
   sapply(pkg, require, character.only = TRUE)
   print("packages ready")
 }
-packages <- c("devtools", "shinydashboard", "RPostgreSQL", "dplyr", "plyr", "scales", "dplyr", "wordcloud", "syuzhet", "tidyverse")
+packages <- c("devtools", "rvest", "RCurl", "shinydashboard", "RPostgreSQL", "plyr", "dplyr", "scales", "wordcloud", "syuzhet", "lubridate", "tidyverse", "scales")
 
 active_packages(packages)
-
-drv <- dbDriver("PostgreSQL") #wczytuje sterownik
-con <- dbConnect(drv, dbname = "postgres", host = "localhost", port = 5433, user = "postgres", password = "admin") #łącze się z baza
-wnioski_db <- dbGetQuery(con, "SELECT * from wnioski")
-
-
 
 ui <- dashboardPage(
   # HEADER
   ################################################################################################
-  dashboardHeader(title = "JDSZ1 - sample dashboard",
+  dashboardHeader(title = "JDSZ1 - JDSZ1SK-49 Project R 1 - election pollsJDSZ1SK-70",
                   dropdownMenu(type = "messages",
                                messageItem(
                                  from = "Sales Dept",
@@ -94,8 +91,6 @@ ui <- dashboardPage(
   )
 )
 
-on.exit(dbDisconnect(con))
-
 server <- function(input, output) {
   #if(exists("wnioski_db")) {
     init_db()
@@ -152,13 +147,12 @@ server <- function(input, output) {
 
 init_db <- function(){
   drv <- dbDriver("PostgreSQL")
-  con <- dbConnect(drv, dbname = "postgres", host = "localhost", port = 5433,
+  con <- dbConnect(drv, dbname = "pg_2", host = "localhost", port = 5432,
                    user = "postgres", 
-                   password = "admin")
+                   password = "postgres")
   wnioski_db <- dbGetQuery(con, "SELECT * from wnioski")
   dbDisconnect(con)
   dbUnloadDriver(drv)
-  on.exit(dbDisconnect(con))
 }
 
 init_sentiment_data <- function() {
@@ -166,7 +160,7 @@ init_sentiment_data <- function() {
   library("SnowballC")
   library("wordcloud")
   library("RColorBrewer")
-  library("tidyverse")
+  library(tidyverse)
   filePath <- "http://www.gutenberg.org/cache/epub/103/pg103.txt"
   text <- readLines(filePath)
   docs <- Corpus(VectorSource(text))
@@ -186,10 +180,6 @@ init_sentiment_data <- function() {
                                    sent_value=df_sentiment_transposed, row.names=NULL) # prepare final data frame with emotions in 1st column, values in 2nd
   df_emotions <<- df_sentiment_final[1:8,]
 }
-on.exit(dbDisconnect(con))
+
 shinyApp(ui, server)
 
-isPostgresqlIdCurrent(con)
-on.exit(dbDisconnect(con))
-
-?shinyApp
