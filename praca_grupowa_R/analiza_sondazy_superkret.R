@@ -1,7 +1,3 @@
-install.packages("lubridate")
-library(lubridate)
-library(tidyverse)
-library(scales)
 
 active_packages <- function(pkg){
   new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
@@ -10,6 +6,7 @@ active_packages <- function(pkg){
   sapply(pkg, require, character.only = TRUE)
   print("packages ready")
 }
+
 packages <- c("devtools", "openxlsx", "RPostgreSQL", "dplyr", "XML", "RCurl", "rvest", "lubridate", "tidyverse", "scales")
 
 
@@ -66,12 +63,24 @@ ggplot(data = dane_z_html2)+
   geom_bar(mapping = aes(x=osrodek)) +
   theme(axis.text.x=element_text(angle = 90,hjust = 1))
 
+# ggplot - K15 results - 53
+#JDSZ1SK-49 Project R 1 - election polls K15 - JDSZ1SK-53
+dane_z_html2$Publikacja <- dmy(dane_z_html2$Publikacja)
+
+
+ggplot(data = dane_z_html2, mapping = aes(x = Publikacja, y = K15/100)) +
+  geom_point(mapping = aes(color = osrodek)) +
+  geom_smooth() +
+  xlab("Data publikacji sonda�u") +
+  ylab("Warto�ci procentowe - Kukiz'15") +
+  scale_y_continuous(labels= percent_format())
+
 #JDSZ1SK-49 Project R 1 - election polls RAZEM -JDSZ1SK-52
+
 ggplot(data = dane_z_html2) +
   geom_point(mapping=aes(x = Publikacja, y = PARTIA_RAZEM/100, color = osrodek))+
   geom_smooth(mapping=aes(x = Publikacja, y = PARTIA_RAZEM/100))+
   scale_y_continuous(labels = percent_format())
-theme(axis.text.x=element_text(angle = 90,hjust = 1))
 
 #JDSZ1SK-49 Project R 1 - election polls SLD -JDSZ1SK-54 
 ggplot(data = dane_z_html2, mapping = aes(x = Publikacja, y = SLD/100)) + 

@@ -45,7 +45,7 @@ loaded_packages() #sprawdzenie wczytanych pakietów
 
 # 4) load all data from szczegoly_rekompensat table into data frame called df_compensations
 drv <- dbDriver("PostgreSQL") #wczytuje sterownik
-con <- dbConnect(drv, dbname = "postgres", host = "localhost", port = 5433, user = "postgres", password = "admin") #łącze się z baza
+con <- dbConnect(drv, dbname = "postgres", host = "localhost", port = 5432, user = "postgres", password = "postgres") #łącze się z baza
 dbExistsTable(con, "szczegoly_rekompensat") #sprawdzam czy tabela istenieje
 
 df_compensations<- data.frame(dbGetQuery(con, "SELECT * from szczegoly_rekompensat")) #przypisuje tabelę do ramki danych
@@ -130,7 +130,7 @@ l_persons <- list(name=c("Ździsław", "Miecio", "Halyna"),
                   homework_results=c((sample(1:100,1)),(sample(1:100,1)),(sample(1:100,1))))
 
 l_persons
-                  
+
 # 19) Print first element from l_persons list (don't use $ sign)
 
 l_persons[1]
@@ -152,8 +152,8 @@ df_comp_small <- data.frame(df_compensations$id_agenta, df_compensations$data_ot
 # 23) Create new data frame with aggregated data from df_comp_small (how many rows we have per each account, and what's the total value of recompensations in each account)
 
 new_data_frame <- data.frame(df_comp_small%>%
-                    group_by(df_comp_small$df_compensations.konto)%>%
-                    summarise(rows_per_account=n(),value_of_recompensations=sum(df_compensations.kwota)))
+                               group_by(df_comp_small$df_compensations.konto)%>%
+                               summarise(rows_per_account=n(),value_of_recompensations=sum(df_compensations.kwota)))
 
 new_data_frame
 
@@ -162,7 +162,7 @@ new_data_frame
 best_agent <-  data.frame(df_comp_small%>%
                             group_by(df_comp_small$df_compensations.id_agenta)%>%
                             summarise(rows_per_account=n(),value_of_recompensations=sum(df_compensations.kwota)))
-                            
+
 posortowane_best_agent <- arrange(best_agent, desc(rows_per_account), desc(value_of_recompensations))
 posortowane_best_agent
 
@@ -187,10 +187,10 @@ while (i!=20) {
 
 
 # 27) Add extra column into df_comp_small data frame called amount_category. 
-      
+
 df_comp_small["amount_category"] <- NA
 colnames(df_comp_small)
-  
+
 # 28) Store data from df_comp_small into new table in DB
 
 dbWriteTable(con, name="df_comp_small", df_comp_small)
@@ -204,6 +204,7 @@ avg_amount <- mean(df_comp_small$df_compensations.kwota)
 df_comp_small$amount_category <- ifelse(df_comp_small$df_compensations.kwota > avg_amount, "high", "low")
 
 # 30) Create function f_agent_stats which for given agent_id, will return total number of actions in all tables (analiza_wniosku, analiza_operatora etc)
+
 
 
 ?dbGetQuery
@@ -244,7 +245,6 @@ f_agent_stats(id_agenta)
 ??RPostgreSQL
 
 
-help
 
-
-
+dbDisconnect(con)
+dbUnloadDriver(drv)
