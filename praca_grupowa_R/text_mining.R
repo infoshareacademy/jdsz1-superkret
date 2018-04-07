@@ -10,7 +10,7 @@ library(syuzhet)
 ##################################################################################
 # PRZYGOTOWANIE TEKSTU DO ANALIZY
 
-text <- readLines("parties_en.txt") #czytam tekst pobrany z github (u mnie w pliku projektu)
+text <- readLines("https://raw.githubusercontent.com/infoshareacademy/jdsz1-materialy-r/master/20180323_ellection_pools/parties_en.txt?token=Ah9VPjJxKA_iSK-IFWZpnAzMSkWdCUbkks5azmYQwA%3D%3D") 
 
 parties <- Corpus(VectorSource(text)) # konwertuję tekst na vector potem na Corpus
 
@@ -39,7 +39,7 @@ m #możemy wyświetlić ponieważ ma tylko 5 kolumn
 
 v <- sort(rowSums(m),decreasing=TRUE) # sumujemy poszczególne słowa
 v
-d <- data.frame(word = names(v), lp=v)
+d <- data.frame(word = names(v), freq=v)
 d
 
 ####################################################################
@@ -72,7 +72,7 @@ class(df_sentiment)
 
 df_sentiment_transposed <- t(df_sentiment) # transponujemy kolumny df na wiersze
 df_sentiment_final <- data.frame(sentiment=row.names(df_sentiment_transposed), 
-                    sent_value=df_sentiment_transposed, row.names=NULL) #emocje w 1, wartości w 2 kolumnie
+                                 sent_value=df_sentiment_transposed, row.names=NULL) #emocje w 1, wartości w 2 kolumnie
 df_sentiment_final
 # definiujemy dane jednostkowe i zbiorcze (suma negatywnych, pozytywnych)
 df_emotions <- df_sentiment_final[1:8,]
@@ -84,4 +84,26 @@ ggplot(data = df_emotions, mapping = aes(x = sentiment, y = sent_value, color = 
   xlab("emotion") +
   ylab("words count") +
   theme(axis.text.x=element_text(angle=0, hjust=1))
+
+##################
+# JDSZ1 - Super KretJDSZ1SK-49 Project R 1 - election pollsJDSZ1SK-69
+
+#Goal: I need to see % sentiment from text
+#please add data to "text mining - sentiment" tab:
+
+# infoBoxOutput (% of positives)
+#infoBoxOutput (% of negatives)
+
+sum_sent <- df_sentiments [1,2] + df_sentiments [2,2]
+
+perc_neg <- df_sentiments [1,2]/ sum_sent*100
+perc_pos <- df_sentiments [2,2]/ sum_sent*100
+
+perc <- c(perc_neg, perc_pos)
+
+ggplot (data=df_sentiments, mapping =aes(x=sentiment, y=c(perc_neg, perc_pos))) +
+  geom_bar(stat = "identity") +
+  xlab("sentiment") +
+  ylab("percentage")
+
 
