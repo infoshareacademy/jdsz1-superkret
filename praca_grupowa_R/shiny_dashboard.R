@@ -37,8 +37,8 @@ ui <- dashboardPage(
               h1("Analiza sentymentu"),
               plotOutput("sent"),
               h1("Udział procentowy"),
-              uiOutput("sent1"),
               plotOutput("emotionsPlot")
+      
       )
       
     )))
@@ -151,11 +151,6 @@ server <- function(input, output){
       coord_flip()
     
   })
-  
-  output$sent1 <- renderUI({ # pierwszy element wybierany z listy
-    selectInput(inputId = "aaa", "informacja",choices = c("negative", "positive"), selected = FALSE)
-  }
-  )
   
   output$emotionsPlot <- renderPlot({
     ggplot (data=df_sentiments, mapping=aes(x=sentiment, y=perc)) +
