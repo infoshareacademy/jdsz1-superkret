@@ -1,0 +1,106 @@
+# ZADANIE
+============
+  
+# Zadanie: zeksploruj dataset mtcars. Poszukaj interesujących zależności pomiędzy danymi.
+
+
+#library(e1071)
+data("mtcars")
+head(mtcars)
+?mtcars
+str(mtcars)
+
+# Scatter plot - sprawdzamy czy może istnieć liniowa zależnośc pomiędzy zmiennymi.
+par(mfrow=c(3,3))
+scatter.smooth(x=mtcars$mpg, y=mtcars$cyl, main="MPG~ CYL") # zmienna zależna zmienia się skokowo - ciężko opierać się w analizie na zależności liniowej
+abline(lm(mtcars$cyl ~ mtcars$mpg), col="green", lwd=2)
+
+scatter.smooth(x=mtcars$carb, y=mtcars$qsec, main="CARB~ QSEC") #zmienne są odwrotnie proporcjonalne do siebie. #wraz ze wzrostem ilości gaźników spada czas  przejazdu 1/4 mili
+abline(lm(mtcars$carb ~ mtcars$qsec), col="green", lwd=2)
+
+scatter.smooth(x=mtcars$hp, y=mtcars$qsec, main="HP~ QSEC") #zmienne są odwrotnie proporcjonalne do siebie. 
+#wraz ze wzrostem koni mechanicznych spada czas  przejazdu 1/4 mili
+abline(lm(mtcars$carb ~ mtcars$qsec), col="green", lwd=2)
+
+scatter.smooth(x=mtcars$mpg, y=mtcars$hp, main="MPG~ HP") #zmienne są odwrotnie proporcjonalne do siebie. 
+#Wraz ze wzrostem il.koni mechanicznych spada liczba mil, które można przejechac na jednym galonie
+abline(lm(mtcars$mpg ~ mtcars$hp), col="green", lwd=2)
+
+scatter.smooth(x=mtcars$wt, y=mtcars$hp, main="WT~ HP") #zmienne rosną proporcjonalnie do siebie. 
+#Wraz ze wzrostem wagi rośnie liczba koni mechanicznych
+abline(lm(mtcars$wt ~ mtcars$hp), col="green", lwd=2)
+
+scatter.smooth(x=mtcars$wt, y=mtcars$carb, main="WT~ CARB") #zmienne rosną proporcjonalnie do siebie. 
+#Wraz ze wzrostem wagi rośnie liczba biegów
+abline(lm(mtcars$wt ~ mtcars$carb), col="green", lwd=2)
+
+
+# BoxPlot – sprawdzamy czy istnieją wartości mocno odstające od reszty
+par(mfrow=c(2,4)) # dzielimy outputy na dwie kolumny
+boxplot(mtcars$mpg, main="MPG") # boxplot dla "mpg"
+boxplot(mtcars$cyl, main="Cyl") #boxplot dla "cyl" - wartości 
+boxplot(mtcars$carb, main="CARB") #boxplot dla "carb"
+boxplot(mtcars$qsec, main="QSEC") #boxplot dla "qsec"
+boxplot(mtcars$hp, main="HP") #boxplot dla "hp"
+boxplot(mtcars$drat, main="DRAT") #boxplot dla "drat"
+boxplot(mtcars$wt, main="WT") #boxplot dla "wt"
+
+####################dotąd zrobione
+# Funkacja gęstośći - sprawdzamy czy zmienna zależna ma rozkład normalny
+
+library(e1071)
+
+par(mfrow=c(3,3)) 
+
+plot(density(mtcars$mpg), main= "MPG", ylab = "Częstotliwość",
+     sub=paste("Skośność:", round(e1071::skewness(mtcars$mpg),1)))
+polygon(density(mtcars$mpg), col="gray") # rozkład mocno dodatnioskośny
+
+plot(density(mtcars$cyl), main= "CYL", ylab = "Częstotliwość",
+     sub=paste("Skośność:", round(e1071::skewness(mtcars$cyl),1)))
+polygon(density(mtcars$cyl), col="purple") # rozkałd najbardziej zbliżony do normalnego - skośność -0,2 
+
+plot(density(mtcars$carb), main= "CARB", ylab = "Częstotliwość",
+     sub=paste("Skośność:", round(e1071::skewness(mtcars$carb),1)))
+polygon(density(mtcars$carb), col="violet") # rozkład najbardziej oddalony od normalnego - skośność 1,1
+
+plot(density(mtcars$qsec), main= "QSEC", ylab = "Częstotliwość",
+     sub=paste("Skośność:", round(e1071::skewness(mtcars$qsec),1)))
+polygon(density(mtcars$qsec), col="green") # rozkład lekko dodatnioskośny
+
+plot(density(mtcars$hp), main= "HP", ylab = "Częstotliwość",
+     sub=paste("Skośność:", round(e1071::skewness(mtcars$hp),1)))
+polygon(density(mtcars$hp), col="gray") # rozkład mocno dodatnioskośny
+
+plot(density(mtcars$drat), main= "DRAT", ylab = "Częstotliwość",
+     sub=paste("Skośność:", round(e1071::skewness(mtcars$drat),1)))
+polygon(density(mtcars$drat), col="green") # rozkład lekko dodatnioskośny
+
+plot(density(mtcars$wt), main= "WT", ylab = "Częstotliwość",
+     sub=paste("Skośność:", round(e1071::skewness(mtcars$wt),1)))
+polygon(density(mtcars$wt), col="green") # rozkład lekko dodatnioskośny
+
+# Korelacja
+#<0,2 brak zależności
+#0,2-0,4 słaba zależność
+#0,4-0,7 umiarkowana zależność
+#0,7-0,9 dość silna zależność
+#>0,9 bardzo silna zależność
+
+#zakładamy jako zmienną zależną mpg
+cor(mtcars$mpg, mtcars$drat) # 0,68
+cor(mtcars$mpg, mtcars$hp) # -0,78
+cor(mtcars$mpg, mtcars$wt) # -0,87
+cor(mtcars$mpg, mtcars$cyl) # -0,85
+cor(mtcars$mpg, mtcars$carb) # -0,55
+cor(mtcars$mpg, mtcars$qsec) # 0,42
+
+#zakładamy jako zmienną zależną drat
+cor(mtcars$drat, mtcars$hp) # -0,45
+cor(mtcars$drat, mtcars$wt) # -0,71
+cor(mtcars$drat, mtcars$cyl) # -0,69
+cor(mtcars$drat, mtcars$carb) # -0,09
+cor(mtcars$drat, mtcars$qsec) # 0,09
+cor(mtcars$drat, mtcars$mtg) # 0,09
+
+
