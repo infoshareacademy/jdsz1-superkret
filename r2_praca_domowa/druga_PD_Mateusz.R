@@ -36,6 +36,6 @@ shapiro.test(mtcars$mpg)
 cor.test(mtcars$mpg,length())
 lm(data = mtcars, mpg ~ cyl,disp)
 
-economy_cars <-subset(mtcars, mpg < 15) # W poszukiwaniu ekonomicznego auta szukam takiego który najmniej spala paliwa
-#Najbardziej ekonomiczne auta charakteryzuja sie tym, ze maja 8 cylindrów, ponizej 250 km, maja automatyczna skrzynie biegów
+economy_cars <-subset(mtcars, mpg < 15) # W poszukiwaniu najmniej ekonomicznego auta szukam takiego który najmniej spala paliwa
+#Najmniej ekonomiczne auta charakteryzuja sie tym, ze maja 8 cylindrów, ponizej 250 km, maja automatyczna skrzynie biegów
 #  3 biegi oraz 4 gazniki
