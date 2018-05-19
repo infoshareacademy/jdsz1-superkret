@@ -1,6 +1,6 @@
 # jak wpływa zasolenie wody na temperaturę
 # zmienna niezależna - zasolenie
-# zmeinna zależna - temperatura
+# zmienna zależna - temperatura
 
 active_packages <- function(pkg){
   new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
@@ -23,6 +23,7 @@ head(salty)
 str(salty)
 salty_dt <- salty[c("T_degC", "Salnty")]
 
+str(salty_dt)
 summary(salty_dt)
 
 # missing values
@@ -49,7 +50,7 @@ set.seed(1000) # Set Seed so that same sample can be reproduced in future also
 sample_1 <- sample.int(n = nrow(salty_na), size = floor(.70*nrow(salty_na)), replace = F)
 train_1 <- salty_na[sample_1, ]
 test_1  <- salty_na[-sample_1, ]
-str(test_1)
+str(train_1)
 
 #### checking outliers? (not dividing set)
 # are there any outliers?
@@ -110,16 +111,21 @@ summary(linearMod_na_train)
 #Multiple R-squared:  0.2532,	Adjusted R-squared:  0.2532 
 #F-statistic: 1.933e+05 on 1 and 569970 DF,  p-value: < 2.2e-16
 
+#########################################
 
-#### the question is if we should use linear correlation when R-squared = 0.2532 (can we check model with test set?)
-
-
-###### How to check model 1 using test set?!?! ##################
+#### the question is if we should use linear correlation when R-squared = 0.2403 (can we check model with test set?)
 
 #### checking model_1 using test_1 set
 
-#salty_prob_test_1 <- predict(linearMod_na_train, test_1)
+salty_prob_test_1 <- as.data.frame(predict(linearMod_na_train, test_1))
 
+nrow(salty_prob_test_1)
+
+mse_1 <-mean((test_1$T_degC - salty_prob_test_1)^2)
+mse_1 
+
+#MSE_1 = 13.19388
+##################################
 
 
 
@@ -220,23 +226,19 @@ summary(linearMod_fl_train)
 #Multiple R-squared:  0.2403,	Adjusted R-squared:  0.2403 
 #F-statistic: 1.915e+05 on 1 and 605402 DF,  p-value: < 2.2e-16
 
-
+#########################################
 #### the question is if we should use linear correlation when R-squared = 0.2403 (can we check model with test set?)
+#### we shouldn't probably built linear model
 
 #### checking model_2 using test_2 set
 
-#salty_prob_test_2 <- predict(linearMod_fl_train, test_2)
-#summary(salty_prob_test_2)
-#actuals_preds <- data.frame(cbind(actuals=test_2$T_degC, predicteds=salty_prob_test_2))
-#correlation_accuracy <-cor(actuals_preds)
+salty_prob_test_2 <- as.data.frame(predict(linearMod_fl_train, test_2))
 
-#actuals_preds <- data.frame(cbind(actuals=testData$dist, predicteds=distPred))  # make actuals_predicteds dataframe.
-#correlation_accuracy <- cor(actuals_preds)  # 82.7%
-#head(actuals_preds)
-#>    actuals predicteds
-#> 1        2  -5.392776
-#> 4       22   7.555787
-#> 8       26  20.504349
-#> 20      26  37.769100
-#> 26      54  42.085287
-#> 31      50  50.717663
+nrow(salty_prob_test_2)
+
+mse_2 <-mean((test_2$T_degC - salty_prob_test_2)^2)
+mse_2 
+
+#MSE_2 = 13.52719
+##################################
+
